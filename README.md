@@ -1,4 +1,4 @@
-<h1 align="center">LKT - Magisk :checkered_flag:</h1>
+<h1 align="center">LKT - Magisk 🏁</h1>
 
 <div align="center">
   <strong>legendary.kernel.tweaks</strong>
@@ -22,11 +22,8 @@ LKT aims to achieve the **balance** between **power consumption** and **performa
 Compared to tuning the parameters manually, LKT adopts Project WIPE excellent open source parameters for almost all mainstream SOCs that are generated via machine learning (A.I) and can adapt to multiple styles of workload sequences. This idea is similar to <code>EAS</code>, which takes into account both performance and power consumption costs through power consumption models and workload sequence, but obviously, <code>EAS</code> has a much lower response time and replaces tuning with decision logic. In addition, it also includes other parameter tuning, such as **HMP parameters, Virtual Memory, GPU, I/O scheduler, TCP and Doze rules** to unify the rest of the <code>kernel</code> parameters for a more consistent experience.
 
 ## Requirements
-What you will need 
-
 ```
-• Android Gingerbread+
-• Magisk
+• Magisk 17+
 • Busybox
 ```
 
