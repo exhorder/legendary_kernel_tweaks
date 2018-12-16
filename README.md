@@ -52,6 +52,12 @@ Google Pixel & EAS phones
 Please note that even if your device isn't listed some parameters may stil apply
 
 ## Changelog
+### v1.2.4 (16/12/2018)
+- Fixed connectivity issues for some devices
+- Improved SOC chip recognition for some devices
+- Other minor bug fixes & refinements
+ Thanks to @pKrysenko all telegram group members for testing
+
 ### v1.2.3 (15/12/2018)
 - Minor bug fixes
 

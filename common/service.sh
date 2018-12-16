@@ -3,8 +3,8 @@
 # Codename: LKT
 # Author: korom42 @ XDA
 # Device: Universal
-# Version : 1.2.2
-# Last Update: 08.DEC.2018
+# Version : 1.2.4
+# Last Update: 16.DEC.2018
 # ====================================================#
 # THE BEST BATTERY MOD YOU CAN EVER USE
 # JUST FLASH AND FORGET
@@ -116,19 +116,18 @@ function set_io() {
     # Do not decrease
     # Better late than never
 
-    sleep 48
+    sleep 40
 
     #MOD Variable
-    V="1.2.2"
+    V="1.2.4"
     PROFILE=<PROFILE_MODE>
     LOG=/data/LKT.prop
     dt=$(date '+%d/%m/%Y %H:%M:%S');
     sbusybox=`busybox | awk 'NR==1{print $2}'` 
    
     # RAM variables
-	TOTAL_RAM=`cat /proc/meminfo | grep MemTotal | awk '{print $2}'`; 
-    memg=$(awk -v x=$TOTAL_RAM 'BEGIN{print x/1048576}')
-    ROUND_memg=$(round ${memg} 0) 
+    TOTAL_RAM=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
+    memg=$(free -h | awk '/Mem\:/ { print $2 }')
     
 	# CPU variables
     arch_type=`uname -m`
@@ -150,15 +149,35 @@ function set_io() {
     KERNEL="$(uname -r)"
     APP=`getprop ro.product.model`
     SOC=$(awk '/^Hardware/{print $NF}' /proc/cpuinfo | tr '[:upper:]' '[:lower:]')
+    SOC_ALT1=`getprop ro.product.board` | tr '[:upper:]' '[:lower:]'
+    SOC_ALT2=`getprop ro.product.platform` | tr '[:upper:]' '[:lower:]'
+    SOC_ALT3=`ro.hardware` | tr '[:upper:]' '[:lower:]'
     snapdragon=0
+
+
+
+    if [ -z "$SOC" ]
+    then
+
+    if [ "$SOC_ALT1" != "${SOC_ALT1/msm/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/universal/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/kirin/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/moorefield/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/mt/}" ];then
+    SOC=$SOC_ALT1
+    else
+    SOC=$SOC_ALT2
+    fi
+
+    else
 
     if [ "$SOC" != "${SOC/msm/}" ]; then
     snapdragon=1
-   elif [ "$SOC" != "${SOC/sdm/}" ]; then
+    elif [ "$SOC" != "${SOC/sdm/}" ]; then
     snapdragon=1
     else
     snapdragon=0
     fi
+
+    fi
+
+
 
     if [ $BATT_HLTH -eq "2" ];then
     BATT_HLTH="Very Good"
@@ -276,7 +295,7 @@ logdata "#  =============================="
 logdata "#  Vendor : $VENDOR" 
 logdata "#  Device : $APP" 
 logdata "#  CPU : $SOC ($cores x cores)" 
-logdata "#  RAM : $ROUND_memg GB" 
+logdata "#  RAM : $memg GB" 
 logdata "#  ==============================" 
 logdata "#  ROM : $ROM" 
 logdata "#  Android : $(getprop ro.build.version.release)" 
@@ -493,7 +512,7 @@ vm.dirty_ratio=5 \
 vm.vfs_cache_pressure=70 \
 vm.overcommit_memory=50 \
 vm.overcommit_ratio=0 \
-vm.laptop_mode=0 \
+vm.laptop_mode=5 \
 vm.block_dump=0 \
 vm.dirty_writeback_centisecs=0 \
 vm.dirty_expire_centisecs=0 \
@@ -508,7 +527,7 @@ chmod 0444 /proc/sys/*;
 
 # Disable KSM to save CPU cycles
 
-set_value 1 /sys/kernel/mm/ksm/run
+set_value 0 /sys/kernel/mm/ksm/run
 
 
 # =========
@@ -757,10 +776,9 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	fi
 	
 	else
-	#if grep -w 'interactive' $string1; then
-	if [ -e $string1 ] && [ -e $string2 ]; then
+	if [[ "$available_governors" == *"interactive"* ]]; then
 	
-	logdata "#  HMP Kernel Detected .. Tuning 'Interactive'" 
+	logdata "#  HMP Kernel Detected .. Tuning 'interactive'" 
 
 	set_value "interactive" /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
 	set_value "interactive" /sys/devices/system/cpu/cpu$bcores/cpufreq/scaling_governor
@@ -1529,8 +1547,9 @@ CPU_tuning
 
  logdata "#  Governor Tuning  .. DONE" 
 
- set GPU default power level to 6 instead of 4 or 5
- set_value /sys/class/kgsl/kgsl-3d0/default_pwrlevel 6
+# set GPU default power level to 6 instead of 4 or 5
+
+set_value /sys/class/kgsl/kgsl-3d0/default_pwrlevel 6
 	
  if [ -e "/sys/module/adreno_idler" ]; then
 	write /sys/module/adreno_idler/parameters/adreno_idler_active "Y"
@@ -1678,45 +1697,6 @@ write /proc/sys/net/ipv4/tcp_window_scaling 1
 
 # Increase WI-FI scan delay
 # sqlite=/system/xbin/sqlite3 wifi_idle_wait=36000 
-
-# =========
-# Minor Tweaks
-# =========
-
-# Disable experimental features
-
-strings=(
-NO_GENTLE_FAIR_SLEEPERS
-START_DEBIT
-NO_NEXT_BUDDY
-LAST_BUDDY
-CACHE_HOT_BUDDY
-WAKEUP_PREEMPTION
-NO_HRTICK
-NO_DOUBLE_TICK
-NO_LB_BIAS
-NO_NONTASK_CAPACITY
-NO_TTWU_QUEUE
-NO_SIS_AVG_CPU
-NO_RT_PUSH_IPI
-NO_FORCE_SD_OVERLAP
-NO_RT_RUNTIME_SHARE
-RT_RUNTIME_GREED 
-NO_LB_MIN
-ATTACH_AGE_LOAD
-ENERGY_AWARE
-NO_MIN_CAPACITY_CAPPING
-NO_FBT_STRICT_ORDER
-NO_EAS_USE_NEED_IDLE
-)
-
-
-mount -t debugfs debugfs /sys/kernel/debug
-for i in "${strings[@]}"; do
-write /sys/kernel/debug/sched_features $i
-done
-umount /sys/kernel/debug
-
 
 logdata "#  Enabling Misc Tweaks .. DONE" 
 
