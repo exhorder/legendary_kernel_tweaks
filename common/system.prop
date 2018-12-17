@@ -18,6 +18,9 @@ ro.config.hw_fast_dormancy=0
 ro.ril.fast.dormancy.rule=0
 ro.ril.disable.power.collapse=0
 
+# Turn off lte when in cdma mode
+telephony.lteOnCdmaDevice=0
+
 # Increase Wi-fi scanning interval
 wifi.supplicant_scan_interval=360
 

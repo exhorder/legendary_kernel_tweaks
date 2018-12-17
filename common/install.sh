@@ -64,8 +64,20 @@ if [ $PROFILE_MODE == $UNSELECTED_MODE ]; then
   
   ui_print "** Please choose tweaks mode **"
   ui_print " "
+  ui_print "   Vol+ = Battery"
+  ui_print "   Vol- = skip & show more profiles"
+  ui_print " "
+
+  if $FUNCTION; then
+    PROFILE_MODE=0
+    ui_print "   Battery profile selected."
+    ui_print " "
+
+  else
+  ui_print "** Please choose tweaks mode **"
+  ui_print " "
   ui_print "   Vol+ = Balanced"
-  ui_print "   Vol- = Battery"
+  ui_print "   Vol- = skip & show more profiles"
   ui_print " "
 
   if $FUNCTION; then
@@ -74,9 +86,39 @@ if [ $PROFILE_MODE == $UNSELECTED_MODE ]; then
     ui_print " "
 
   else
-    PROFILE_MODE=0
-    ui_print "   Battery profile selected."
+
+  ui_print "** Please choose tweaks mode **"
+  ui_print " "
+  ui_print "   Vol+ = Performance"
+  ui_print "   Vol- = skip & show more profiles"
+  ui_print " "
+
+  if $FUNCTION; then
+    PROFILE_MODE=2
+    ui_print "   Performance profile selected."
     ui_print " "
+
+  else
+
+  ui_print "** Please choose tweaks mode **"
+  ui_print " "
+  ui_print "   Vol+ = Turbo"
+  ui_print " "
+
+  if $FUNCTION; then
+    PROFILE_MODE=3
+    ui_print "   Turbo profile selected."
+    ui_print " "
+
+  else
+
+    PROFILE_MODE=1
+    ui_print "   Incorrect entry."
+    ui_print "   Balanced profile selected by default."
+    ui_print " "
+  fi
+  fi
+  fi
   fi
 
 fi

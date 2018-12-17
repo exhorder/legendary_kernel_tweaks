@@ -52,11 +52,21 @@ Google Pixel & EAS phones
 Please note that even if your device isn't listed some parameters may stil apply
 
 ## Changelog
+### v1.2.5 (17/12/2018)
+- Added Performance & Fast profiles
+- Added partial support (balanced profile only) for exynos9810, kirin650, sd615
+- Fixed battery drain for EAS devices
+- Fixed some devices not being recognized (again)
+- Fixed some bugs with low RAM devices
+- Fixed RAM capacity not being displayed correctlly
+- Script refinements
+- A ton of bug fixes
+
 ### v1.2.4 (16/12/2018)
 - Fixed connectivity issues for some devices
 - Improved SOC chip recognition for some devices
 - Other minor bug fixes & refinements
- Thanks to @pKrysenko all telegram group members for testing
+ Thanks to @pKrysenko & all telegram group members for testing
 
 ### v1.2.3 (15/12/2018)
 - Minor bug fixes
