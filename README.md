@@ -61,7 +61,7 @@ Please note that even if your device isn't listed some parameters may stil apply
 - Bug fixes and refinemetns
 
 ### v1.2.5 (17/12/2018)
-- Added Performance & Fast profiles
+- Added Performance & Turbo profiles
 - Added partial support (balanced profile only) for exynos9810, kirin650, sd615
 - Fixed battery drain for EAS devices
 - Fixed some devices not being recognized (again)
