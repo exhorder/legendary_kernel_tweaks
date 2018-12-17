@@ -112,6 +112,17 @@ function set_io() {
 	fi
 }
 
+function is_cpu() {
+
+    if [ "$SOC_ALT1" != "${SOC_ALT1/msm/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/sdm/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/apq/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/universal/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/kirin/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/moorefield/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/mt/}" ];then
+
+        return 1
+    else
+        return 0
+    fi
+
+}
+
     # Sleep at boot
     # Do not decrease
     # Better late than never
@@ -152,19 +163,70 @@ function set_io() {
     SOC=$(awk '/^Hardware/{print $NF}' /proc/cpuinfo | tr '[:upper:]' '[:lower:]')
     SOC_ALT1=`getprop ro.product.board` | tr '[:upper:]' '[:lower:]'
     SOC_ALT2=`getprop ro.product.platform` | tr '[:upper:]' '[:lower:]'
-    SOC_ALT3=`ro.hardware` | tr '[:upper:]' '[:lower:]'
+    SOC_ALT3=`ro.chipname` | tr '[:upper:]' '[:lower:]'
+    SOC_ALT4=`ro.hardware` | tr '[:upper:]' '[:lower:]'
+    SOC_ALT5=`cat /data/soc.prop`
+    SOC_ALT5 = $SOC_ALT5 | tr '[:upper:]' '[:lower:]'
+
     snapdragon=0
+    chip=0
+
+    function logdata() {
+        echo $1 |  tee -a $LOG;
+    }
+
+    if [ -e $LOG ]; then
+     rm $LOG;
+    fi;
+
+    is_substring(){
+        case "$2" in
+                *$1*) chip=1;;
+                *) chip=0;;
+        esac
+    }
 
 
+    function chip_check() {
+        is_substring "msm" $1 || is_substring "apq" $1 || is_substring "sdm" $1 ||is_substring "universal" $1 || is_substring "kirin" $1 || is_substring "moorefield" $1
+    }
 
-    if [ -z "$SOC" ]
-    then
 
-    if [ "$SOC_ALT1" != "${SOC_ALT1/msm/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/sdm/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/apq/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/universal/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/kirin/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/moorefield/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/mt/}" ];then
-    SOC=$SOC_ALT1
-    else
-    SOC=$SOC_ALT2
-    fi
+    if [ -z "$SOC" ] ;then
+    chip_check $SOC_ALT1
+      if [ $chip -eq "1" ];then
+      SOC=$SOC_ALT1
+      else
+      chip_check $SOC_ALT2
+        if [ $chip -eq "1" ];then
+        SOC=$SOC_ALT2
+        else
+        chip_check $SOC_ALT3
+          if [ $chip -eq "1" ];then
+          SOC=$SOC_ALT3
+          else
+          chip_check $SOC_ALT4
+            if [ $chip -eq "1" ];then
+            SOC=$SOC_ALT4
+            else
+            chip_check $SOC_ALT5
+              if [ $chip -eq "1" ];then
+              SOC=$SOC_ALT5
+              else
+              logdata "# *ERROR* CPU chip model detection failed"
+              logdata "# 1) Using a ROOT file explorer"
+              logdata "# 2) Navigate to /data/SOC.prop and edit it with your chip model"
+              logdata "#    ex: kirin970, msm8996, exynos8995 etc..."
+              logdata "# 3) Save changes & Reboot"
+              if [ ! -f /data/SOC.prop ]; then
+              touch "/data/soc.prop"
+              fi
+              exit 0
+              fi
+            fi
+          fi
+        fi
+      fi
 
     else
 
@@ -179,6 +241,7 @@ function set_io() {
     fi
 
     fi
+
 
 
 
@@ -273,13 +336,6 @@ function set_io() {
 	chmod 0444 $GOV_PATH_B/schedutil/*
 }
 
-    function logdata() {
-        echo $1 |  tee -a $LOG;
-    }
-
-    if [ -e $LOG ]; then
-     rm $LOG;
-    fi;
 
 
 	if [ $PROFILE -eq 0 ];then
@@ -479,7 +535,7 @@ if [ $PROFILE -eq 3 ];then
 f_LMK5=$(awk -v x=$LMK1 -v y=$calculator 'BEGIN{print x*4.5}') #Low Memory Killer 5
 LMK5=$(round ${f_LMK5} 0)
 
-f_LMK6=$(awk -v x=$LMK1 -v y=$calculator 'BEGIN{print x*6}') #Low Memory Killer 6
+f_LMK6=$(awk -v x=$LMK1 -v y=$calculator 'BEGIN{print x*7.5}') #Low Memory Killer 6
 LMK6=$(round ${f_LMK6} 0)
 else
 f_LMK5=$(awk -v x=$LMK1 -v y=$calculator 'BEGIN{print x*3.33}') #Low Memory Killer 5
@@ -527,9 +583,6 @@ kernel.random.write_wakeup_threshold=128 \
 vm.block_dump=0 \
 vm.dirty_writeback_centisecs=0 \
 vm.dirty_expire_centisecs=0 \
-dir-notify-enable=0 \
-fs.lease-break-time=20 \
-fs.leases-enable=1 \
 vm.compact_memory=1 \
 vm.compact_unevictable_allowed=1 \
 vm.page-cluster=0 \
@@ -538,8 +591,8 @@ else
 sysctl -e -w  vm.drop_caches=3 \
 vm.oom_dump_tasks=1 \
 vm.oom_kill_allocating_task=0 \
-vm.dirty_background_ratio=1 \
-vm.dirty_ratio=5 \
+vm.dirty_background_ratio=20 \
+vm.dirty_ratio=20 \
 vm.vfs_cache_pressure=100 \
 vm.overcommit_memory=50 \
 vm.overcommit_ratio=0 \
@@ -549,9 +602,6 @@ kernel.random.write_wakeup_threshold=896 \
 vm.block_dump=0 \
 vm.dirty_writeback_centisecs=500 \
 vm.dirty_expire_centisecs=1500 \
-dir-notify-enable=0 \
-fs.lease-break-time=10 \
-fs.leases-enable=1 \
 vm.compact_memory=1 \
 vm.compact_unevictable_allowed=1 \
 vm.page-cluster=0 \
@@ -602,7 +652,7 @@ logdata "#  Snapdragon SoC detected"
 fi
 
 
-	if [ -e /sys/devices/soc/soc:qcom,bcl/mode ]; then
+    if [ -e /sys/devices/soc/soc:qcom,bcl/mode ]; then
     chmod 644 /sys/devices/soc/soc:qcom,bcl/mode
     write /sys/devices/soc/soc:qcom,bcl/mode -n disable
     write /sys/devices/soc/soc:qcom,bcl/hotplug_mask 0
@@ -641,80 +691,23 @@ fi
 
 	write /sys/devices/system/cpu/online "0-$coresmax"
 
-	if [ -d "/dev/stune" ]; then
-	set_value 5 /dev/stune/foreground/schedtune.boost
-	set_value 25 /dev/stune/top-app/schedtune.boost
-	set_value 0 /dev/stune/system-background/schedtune.boost
-	set_value "-100" /dev/stune/schedtune.boost
-	set_value "-100" /dev/stune/background/schedtune.boost
-	#set_value 0 /dev/stune/schedtune.prefer_idle
-	#set_value 0 /dev/stune/background/schedtune.prefer_idle
-	set_value 1 /dev/stune/top-app/schedtune.prefer_idle
-	set_value 1 /dev/stune/foreground/schedtune.prefer_idle
-	set_value 1 $SVD/schedutil/iowait_boost_enable
-	set_value 1 $GLD/schedutil/iowait_boost_enable
-	#set_value 500 $SVD/schedutil/up_rate_limit_us
-	#set_value 8000 $SVD/schedutil/down_rate_limit_us
-	#set_value 500 $GLD/schedutil/up_rate_limit_us
-	#set_value 8000 $GLD/schedutil/down_rate_limit_us
-	fi
-	
-	if [ -e "/proc/sys/kernel/sched_tunable_scaling" ]; then
-	set_value 2 /proc/sys/kernel/sched_tunable_scaling
-	fi
-	if [ -e "/proc/sys/kernel/sched_child_runs_first" ]; then
-	set_value 1 /proc/sys/kernel/sched_child_runs_first
-	fi
-	if [ -e "/proc/sys/kernel/sched_cfs_boost" ]; then
-	set_value 0 /proc/sys/kernel/sched_cfs_boost
-	fi
-	if [ -e "/proc/sys/kernel/sched_latency_ns" ]; then
-	set_value 100000 /proc/sys/kernel/sched_latency_ns
-	fi
-	if [ -e "/proc/sys/kernel/sched_autogroup_enabled" ]; then
-	set_value 0 /proc/sys/kernel/sched_autogroup_enabled
-	fi
-	if [ -e "/proc/sys/kernel/sched_boost" ]; then
-	set_value 0 /proc/sys/kernel/sched_boost
-	fi
-	if [ -e "/proc/sys/kernel/sched_cstate_aware" ]; then
-	set_value 1 /proc/sys/kernel/sched_cstate_aware
-	fi
-	if [ -e "/proc/sys/kernel/sched_initial_task_util" ]; then
-	set_value 0 /proc/sys/kernel/sched_initial_task_util
-	fi
-	if [ -e "/sys/module/msm_performance/parameters/touchboost/sched_boost_on_input" ]; then
-	set_value N /sys/module/msm_performance/parameters/touchboost/sched_boost_on_input
-	fi
-	if [ -e "/proc/sys/kernel/sched_is_big_little" ]; then
-	set_value 1 /proc/sys/kernel/sched_is_big_little
-	fi
+
 
 	set_value 90 /proc/sys/kernel/sched_spill_load
 	set_value 1 /proc/sys/kernel/sched_prefer_sync_wakee_to_waker
 	set_value 3000000 /proc/sys/kernel/sched_freq_inc_notify
 
-	if [ $coresmax -eq 3 ];then
-	set_value 1 /dev/cpuset/background/cpus
-	set_value 0-1 /dev/cpuset/system-background/cpus
-	set_value 0-1,2-3 /dev/cpuset/foreground/cpus
-	set_value 0-1,2-3 /dev/cpuset/top-app/cpus
-	elif [ $coresmax -eq 5 ];then
-	set_value 2-3 /dev/cpuset/background/cpus
-	set_value 0-3 /dev/cpuset/system-background/cpus
-	set_value 0-3,4-5 /dev/cpuset/foreground/cpus
-	set_value 0-3,4-5 /dev/cpuset/top-app/cpus
-	else
 	set_value 2-3 /dev/cpuset/background/cpus
 	set_value 0-3 /dev/cpuset/system-background/cpus
 	set_value 0-3,4-7 /dev/cpuset/foreground/cpus
 	set_value 0-3,4-7 /dev/cpuset/top-app/cpus
-        fi
+
 
 	# set_value 85 /proc/sys/kernel/sched_downmigrate
 	# set_value 95 /proc/sys/kernel/sched_upmigrate
 
 	set_value 0 /sys/module/msm_performance/parameters/touchboost
+	set_value 80 /sys/module/cpu_boost/parameters/input_boost_ms
 
 	available_governors=`cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors`
 	string1=/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors;
@@ -734,134 +727,72 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	set_value "schedutil" $GLD/scaling_governor
 	fi
 	
-	logdata "#  EAS Kernel Detected .. Tuning $govn" 
+	logdata "#  EAS Kernel Detected .. Tuning $govn"
+
+	case "$SOC" in
+	"sdm845") #sd845 
 
 	if [ $PROFILE -eq 0 ];then
-	set_value 0 /sys/devices/system/cpu/cpu$bcores/core_ctl/min_cpus
-	set_value $bcores /sys/devices/system/cpu/cpu$bcores/core_ctl/max_cpus
-	
-	if [ -e "/sys/module/cpu_boost" ]; then
+	set_value "0:1680000 4:1880000" /sys/module/msm_performance/parameters/cpu_max_freq
 	set_value "0:1080000 4:0" /sys/module/cpu_boost/parameters/input_boost_freq
-	fi
-	
-	set_value 80 /sys/module/cpu_boost/parameters/input_boost_ms
-		
-	if [ -e "/proc/sys/kernel/sched_use_walt_task_util" ]; then
-		write /proc/sys/kernel/sched_use_walt_task_util 1
-		write /proc/sys/kernel/sched_use_walt_cpu_util 1
-		write /proc/sys/kernel/sched_walt_init_task_load_pct 0
-		write /proc/sys/kernel/sched_walt_cpu_high_irqload 10000000
-		write /proc/sys/kernel/sched_rt_runtime_us 980000
-	fi
-
-	write /sys/module/cpu_boost/parameters/dynamic_stune_boost 5
-	write /proc/sys/kernel/sched_nr_migrate 48
-
+	set_value 2 /sys/devices/system/cpu/cpu4/core_ctl/min_cpus
+	set_value 2 /sys/devices/system/cpu/cpu4/core_ctl/max_cpus
 	set_param_eas cpu0 hispeed_freq 1180000
 	set_param_eas cpu0 hispeed_load 90
 	set_param_eas cpu0 pl 0
-	set_param_eas cpu$bcores hispeed_freq 1080000
-	set_param_eas cpu$bcores hispeed_load 90
-	set_param_eas cpu$bcores pl 0
-
-
+	set_param_eas cpu4 hispeed_freq 1080000
+	set_param_eas cpu4 hispeed_load 90
+	set_param_eas cpu4 pl 0
 	elif [ $PROFILE -eq 1 ]; then
-
-
-	set_value $(($bcores/2)) /sys/devices/system/cpu/cpu$bcores/core_ctl/min_cpus
-	set_value $bcores /sys/devices/system/cpu/cpu$bcores/core_ctl/max_cpus
-
-	if [ -e "/sys/module/cpu_boost" ]; then
+	set_value "0:1780000 4:2280000" /sys/module/msm_performance/parameters/cpu_max_freq
 	set_value "0:1080000 4:0" /sys/module/cpu_boost/parameters/input_boost_freq
-	fi
-
-	set_value 80 /sys/module/cpu_boost/parameters/input_boost_ms
-	
-	if [ -e "/proc/sys/kernel/sched_use_walt_task_util" ]; then
-		write /proc/sys/kernel/sched_use_walt_task_util 1
-		write /proc/sys/kernel/sched_use_walt_cpu_util 1
-		write /proc/sys/kernel/sched_walt_init_task_load_pct 10
-		write /proc/sys/kernel/sched_walt_cpu_high_irqload 10000000
-		write /proc/sys/kernel/sched_rt_runtime_us 980000
-	fi
-
-	write /sys/module/cpu_boost/parameters/dynamic_stune_boost 8
-	write /proc/sys/kernel/sched_nr_migrate 64
-
+	set_value 2 /sys/devices/system/cpu/cpu4/core_ctl/min_cpus
+	set_value 4 /sys/devices/system/cpu/cpu4/core_ctl/max_cpus
 	set_param_eas cpu0 hispeed_freq 1280000
 	set_param_eas cpu0 hispeed_load 90
 	set_param_eas cpu0 pl 0
-	set_param_eas cpu$bcores hispeed_freq 1280000
-	set_param_eas cpu$bcores hispeed_load 90
-	set_param_eas cpu$bcores pl 0
-
+	set_param_eas cpu4 hispeed_freq 1280000
+	set_param_eas cpu4 hispeed_load 90
+	set_param_eas cpu4 pl 0
 	elif [ $PROFILE -eq 2 ]; then
-
-
-	set_value $(($bcores/2)) /sys/devices/system/cpu/cpu$bcores/core_ctl/min_cpus
-	set_value $bcores /sys/devices/system/cpu/cpu$bcores/core_ctl/max_cpus
-
-	if [ -e "/sys/module/cpu_boost" ]; then
-	set_value "0:1080000 4:0" /sys/module/cpu_boost/parameters/input_boost_freq
-	fi
-
-	set_value 80 /sys/module/cpu_boost/parameters/input_boost_ms
-	
-	if [ -e "/proc/sys/kernel/sched_use_walt_task_util" ]; then
-		write /proc/sys/kernel/sched_use_walt_task_util 1
-		write /proc/sys/kernel/sched_use_walt_cpu_util 1
-		write /proc/sys/kernel/sched_walt_init_task_load_pct 10
-		write /proc/sys/kernel/sched_walt_cpu_high_irqload 10000000
-		write /proc/sys/kernel/sched_rt_runtime_us 980000
-	fi
-
-	write /sys/module/cpu_boost/parameters/dynamic_stune_boost 15
-	write /proc/sys/kernel/sched_nr_migrate 128
-
+	set_value "0:1780000 4:2880000" /sys/module/msm_performance/parameters/cpu_max_freq
+	set_value "0:1180000 4:0" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value 2 /sys/devices/system/cpu/cpu4/core_ctl/min_cpus
+	set_value 4 /sys/devices/system/cpu/cpu4/core_ctl/max_cpus
 	set_param_eas cpu0 hispeed_freq 1380000
 	set_param_eas cpu0 hispeed_load 90
 	set_param_eas cpu0 pl 1
-	set_param_eas cpu$bcores hispeed_freq 1480000
-	set_param_eas cpu$bcores hispeed_load 95
-	set_param_eas cpu$bcores pl 1
-
-
+	set_param_eas cpu4 hispeed_freq 1480000
+	set_param_eas cpu4 hispeed_load 95
+	set_param_eas cpu4 pl 1
 	elif [ $PROFILE -eq 3 ]; then # Turbo
-
-
-	set_value $bcores /sys/devices/system/cpu/cpu$bcores/core_ctl/min_cpus
-	set_value $bcores /sys/devices/system/cpu/cpu$bcores/core_ctl/max_cpus
-
-	if [ -e "/sys/module/cpu_boost" ]; then
-	set_value "0:1080000 4:0" /sys/module/cpu_boost/parameters/input_boost_freq
-	fi
-
-	set_value 80 /sys/module/cpu_boost/parameters/input_boost_ms
-	
-	if [ -e "/proc/sys/kernel/sched_use_walt_task_util" ]; then
-		write /proc/sys/kernel/sched_use_walt_task_util 1
-		write /proc/sys/kernel/sched_use_walt_cpu_util 1
-		write /proc/sys/kernel/sched_walt_init_task_load_pct 10
-		write /proc/sys/kernel/sched_walt_cpu_high_irqload 10000000
-		write /proc/sys/kernel/sched_rt_runtime_us 980000
-	fi
-
-	write /sys/module/cpu_boost/parameters/dynamic_stune_boost 15
-	write /proc/sys/kernel/sched_nr_migrate 128
-
+	set_value "0:1780000 4:2280000" /sys/module/msm_performance/parameters/cpu_max_freq
+	set_value "0:1480000 4:1680000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value 4 /sys/devices/system/cpu/cpu4/core_ctl/min_cpus
+	set_value 4 /sys/devices/system/cpu/cpu4/core_ctl/max_cpus
 	set_param_eas cpu0 hispeed_freq 1480000
 	set_param_eas cpu0 hispeed_load 85
 	set_param_eas cpu0 pl 1
-	set_param_eas cpu$bcores hispeed_freq 1480000
-	set_param_eas cpu$bcores hispeed_load 90
-	set_param_eas cpu$bcores pl 1
-
+	set_param_eas cpu4 hispeed_freq 1480000
+	set_param_eas cpu4 hispeed_load 90
+	set_param_eas cpu4 pl 1
 	fi
 
         after_modify_eas
 
+	;;
+
+	*)
+
+	logdata "#  *ERROR* EAS governor configs for your device aren't available"
+	logdata "#  *NOTE* Consider switching to HMP Kernel if possible" 
+
+	;;
+
+
+	esac
 	fi
-	
+
 	else
 
 	
@@ -920,8 +851,8 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 
 	
 	if [ $PROFILE -eq 0 ];then
-    case "$SOC" in
-    "msm8998" | "apq8098_latv") #sd835
+	case "$SOC" in
+	"msm8998" | "apq8098" | "apq8098_latv") #sd835
 	set_value 2-3 /dev/cpuset/background/cpus
 	set_value 0-3 /dev/cpuset/system-background/cpus
 	set_value 0-3,4-7 /dev/cpuset/foreground/cpus
@@ -943,7 +874,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	esac
 	
 	case "$SOC" in
-    "msm8996" | "msm8996pro" | "msm8996pro-aa"| "msm8996pro-ab" | "msm8996pro-ac" | "apq8096" | "apq8096_latv") #sd820
+    "msm8996" | "msm8996pro" | "msm8996au" |  "msm8996sg" | "msm8996pro-aa"| "msm8996pro-ab" | "msm8996pro-ac" | "apq8096" | "apq8096_latv") #sd820
 	set_value "0:380000 2:380000" /sys/module/cpu_boost/parameters/input_boost_freq
 	
 	set_value 1 /dev/cpuset/background/cpus
@@ -1036,7 +967,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	esac
 	
 	case "$SOC" in
-    "msm8956" | "msm8976")  #sd652/650
+    "msm8956" | "msm8976" | "msm8976sg")  #sd652/650
 	
 	set_value 2-3 /dev/cpuset/background/cpus
 	set_value 0-3 /dev/cpuset/system-background/cpus
@@ -1309,7 +1240,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	elif [ $PROFILE -eq 1 ];then
 
 	 case "$SOC" in
-    "msm8998" | "apq8098_latv") #sd835
+    "msm8998" | "apq8098" | "apq8098_latv") #sd835
 	set_value 2-3 /dev/cpuset/background/cpus
 	set_value 0-3 /dev/cpuset/system-background/cpus
 	set_value 0-3,4-7 /dev/cpuset/foreground/cpus
@@ -1331,7 +1262,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	esac
 	
 	case "$SOC" in
-    "msm8996" | "msm8996pro" | "msm8996pro-aa"| "msm8996pro-ab" | "msm8996pro-ac" | "apq8096" | "apq8096_latv") #sd820
+    "msm8996" | "msm8996pro" | "msm8996au" |  "msm8996sg" | "msm8996pro-aa"| "msm8996pro-ab" | "msm8996pro-ac" | "apq8096" | "apq8096_latv") #sd820
 	set_value "0:380000 2:380000" /sys/module/cpu_boost/parameters/input_boost_freq
 	
 	set_value 1 /dev/cpuset/background/cpus
@@ -1424,7 +1355,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	esac
 	
 	case "$SOC" in
-    "msm8956" | "msm8976")  #sd652/650
+    "msm8956" | "msm8976" | "msm8976sg")  #sd652/650
 	
 	set_value 2-3 /dev/cpuset/background/cpus
 	set_value 0-3 /dev/cpuset/system-background/cpus
@@ -1757,7 +1688,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	elif [ $PROFILE -eq 2 ];then
 	
     case "$SOC" in
-    "msm8998" | "apq8098_latv") #sd835
+    "msm8998" | "apq8098" | "apq8098_latv") #sd835
 	set_value 2-3 /dev/cpuset/background/cpus
 	set_value 0-3 /dev/cpuset/system-background/cpus
 	set_value 0-3,4-7 /dev/cpuset/foreground/cpus
@@ -1779,7 +1710,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	esac
 	
 	case "$SOC" in
-    "msm8996" | "msm8996pro" | "msm8996pro-aa"| "msm8996pro-ab" | "msm8996pro-ac" | "apq8096" | "apq8096_latv") #sd820
+    "msm8996" | "msm8996pro" | "msm8996au" |  "msm8996sg" | "msm8996pro-aa"| "msm8996pro-ab" | "msm8996pro-ac" | "apq8096" | "apq8096_latv") #sd820
 	set_value "0:380000 2:380000" /sys/module/cpu_boost/parameters/input_boost_freq
 	
 	set_value 1 /dev/cpuset/background/cpus
@@ -1871,7 +1802,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	esac
 	
 	case "$SOC" in
-    "msm8956" | "msm8976")  #sd652/650
+    "msm8956" | "msm8976" | "msm8976sg")  #sd652/650
 	
 	set_value 2-3 /dev/cpuset/background/cpus
 	set_value 0-3 /dev/cpuset/system-background/cpus
@@ -2144,7 +2075,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	elif [ $PROFILE -eq 3 ];then
 
 case "$SOC" in
-    "msm8998" | "apq8098_latv") #sd835
+    "msm8998" | "apq8098" | "apq8098_latv") #sd835
 	set_value 2-3 /dev/cpuset/background/cpus
 	set_value 0-3 /dev/cpuset/system-background/cpus
 	set_value 0-3,4-7 /dev/cpuset/foreground/cpus
@@ -2167,7 +2098,7 @@ case "$SOC" in
 	esac
 	
 	case "$SOC" in
-    "msm8996" | "msm8996pro" | "msm8996pro-aa"| "msm8996pro-ab" | "msm8996pro-ac" | "apq8096" | "apq8096_latv") #sd820
+    "msm8996" | "msm8996pro" | "msm8996au" |  "msm8996sg" | "msm8996pro-aa"| "msm8996pro-ab" | "msm8996pro-ac" | "apq8096" | "apq8096_latv") #sd820
 	
 	set_value 1 /dev/cpuset/background/cpus
 	set_value 0-1 /dev/cpuset/system-background/cpus
@@ -2266,7 +2197,7 @@ case "$SOC" in
 	esac
 	
 	case "$SOC" in
-    "msm8956" | "msm8976")  #sd652/650
+    "msm8956" | "msm8976" | "msm8976sg")  #sd652/650
 	# avoid permission problem, do not set 0444
 	set_value 2-3 /dev/cpuset/background/cpus
 	set_value 0-3 /dev/cpuset/system-background/cpus
@@ -2646,15 +2577,27 @@ CPU_tuning
 
 # set GPU default power level to 6 instead of 4 or 5
 
+if [ $PROFILE -le 1 ];then
 set_value /sys/class/kgsl/kgsl-3d0/default_pwrlevel 6
+fi
 	
- if [ -e "/sys/module/adreno_idler" ]; then
+if [ -e "/sys/module/adreno_idler" ]; then
+
+if [ $PROFILE -le 1 ];then
 	write /sys/module/adreno_idler/parameters/adreno_idler_active "Y"
 	write /sys/module/adreno_idler/parameters/adreno_idler_idleworkload "10000"
+else
+	write /sys/module/adreno_idler/parameters/adreno_idler_active "Y"
+	write /sys/module/adreno_idler/parameters/adreno_idler_idleworkload "8000"
+fi
  logdata "# Enabling Adreno Idler (GPU) .. DONE" 
+
+
  else
  logdata "#  *WARNING* Your Kernel does not support Adreno Idler" 
  fi
+
+
 
 # =========
 # RAM TWEAKS
@@ -2911,9 +2854,9 @@ su -c "pm enable com.google.android.gsf/.update.SystemUpdateService$SecretCodeRe
 
 # Search all subdirectories
 
-for f in $(find /cache -name '*.apk' -or -name '*.tmp' -or -name '*.temp' -or -name '*.log' -or -name '*.txt' -or -name '*.0'); do sleep "0.001" && rm $f; done
-for f in $(find /data -name '*.tmp' -or -name '*.temp' -or -name '*.log' -or -name '*.0'); do sleep "0.001" && rm $f; done
-for f in $(find /sdcard -name '*.tmp' -or -name '*.temp' -or -name '*.log' -or -name '*.0'); do sleep "0.001" && rm $f; done
+for f in $(find /cache -name '*.apk' -or -name '*.tmp' -or -name '*.temp' -or -name '*.log' -or -name '*.txt'); do sleep "0.001" && rm $f; done
+for f in $(find /data -name '*.tmp' -or -name '*.temp' -or -name '*.log' ); do sleep "0.001" && rm $f; done
+for f in $(find /sdcard -name '*.tmp' -or -name '*.temp' -or -name '*.log'); do sleep "0.001" && rm $f; done
 
 
 logdata "#  Clean-up .. DONE" 

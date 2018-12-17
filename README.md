@@ -52,6 +52,14 @@ Google Pixel & EAS phones
 Please note that even if your device isn't listed some parameters may stil apply
 
 ## Changelog
+### v1.2.6 (17/12/2018)
+- Added manual workarround for devices with unrecognized chip (Huawei,Xiaomi etc..)
+- Removed EAS support (except sd845) untill further notice (too experimental)
+- Corrected SD845 configs
+- Agressive tunded LMK for Turbo profile for better gaming experience
+- Fixed Termux app conflicts
+- Bug fixes and refinemetns
+
 ### v1.2.5 (17/12/2018)
 - Added Performance & Fast profiles
 - Added partial support (balanced profile only) for exynos9810, kirin650, sd615

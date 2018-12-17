@@ -43,7 +43,6 @@ chooseportold() {
   else
     ui_print "   Volume button is not detected !"
     ui_print " "
-    abort "   Use rename method in TWRP"
   fi
 }
 
@@ -52,8 +51,6 @@ if [ $PROFILE_MODE == $UNSELECTED_MODE ]; then
     FUNCTION=chooseport
   else
     FUNCTION=chooseportold
-    ui_print "   ! Legacy device detected! Using old keycheck method"
-    ui_print " "
     ui_print "** Volume button programming **"
     ui_print " "
     ui_print "   Press Vol UP again :"
@@ -61,11 +58,18 @@ if [ $PROFILE_MODE == $UNSELECTED_MODE ]; then
     ui_print "   Press Vol Down"
     $FUNCTION "DOWN"
   fi
-  
+  ui_print "** LKT Profiles **"
+  ui_print " "
+  ui_print "   1- Battery"
+  ui_print "   2- Balanced"
+  ui_print "   3- Performance"
+  ui_print "   4- Turbo"
+  ui_print " "
+  ui_print " "
   ui_print "** Please choose tweaks mode **"
   ui_print " "
   ui_print "   Vol+ = Battery"
-  ui_print "   Vol- = skip & show more profiles"
+  ui_print "   Vol- = skip & show more .."
   ui_print " "
 
   if $FUNCTION; then
@@ -77,7 +81,7 @@ if [ $PROFILE_MODE == $UNSELECTED_MODE ]; then
   ui_print "** Please choose tweaks mode **"
   ui_print " "
   ui_print "   Vol+ = Balanced"
-  ui_print "   Vol- = skip & show more profiles"
+  ui_print "   Vol- = skip & show more .."
   ui_print " "
 
   if $FUNCTION; then
@@ -90,7 +94,7 @@ if [ $PROFILE_MODE == $UNSELECTED_MODE ]; then
   ui_print "** Please choose tweaks mode **"
   ui_print " "
   ui_print "   Vol+ = Performance"
-  ui_print "   Vol- = skip & show more profiles"
+  ui_print "   Vol- = skip & show more .."
   ui_print " "
 
   if $FUNCTION; then
