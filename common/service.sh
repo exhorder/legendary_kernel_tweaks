@@ -130,7 +130,7 @@ function is_cpu() {
     sleep 60
 
     #MOD Variable
-    V="1.2.5"
+    V="1.2.6"
     PROFILE=<PROFILE_MODE>
     LOG=/data/LKT.prop
     dt=$(date '+%d/%m/%Y %H:%M:%S');
@@ -241,8 +241,6 @@ function is_cpu() {
     fi
 
     fi
-
-
 
 
     if [ $BATT_HLTH -eq "2" ];then

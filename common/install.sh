@@ -43,6 +43,8 @@ chooseportold() {
   else
     ui_print "   Volume button is not detected !"
     ui_print " "
+    abort "   Aborting..."
+
   fi
 }
 
