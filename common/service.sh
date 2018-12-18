@@ -3,8 +3,8 @@
 # Codename: LKT
 # Author: korom42 @ XDA
 # Device: Universal
-# Version : 1.2.5
-# Last Update: 17.DEC.2018
+# Version : 1.2.7
+# Last Update: 18.DEC.2018
 # ====================================================#
 # THE BEST BATTERY MOD YOU CAN EVER USE
 # JUST FLASH AND FORGET
@@ -130,7 +130,7 @@ function is_cpu() {
     sleep 60
 
     #MOD Variable
-    V="1.2.6"
+    V="1.2.7"
     PROFILE=<PROFILE_MODE>
     LOG=/data/LKT.prop
     dt=$(date '+%d/%m/%Y %H:%M:%S');
@@ -163,10 +163,10 @@ function is_cpu() {
     SOC=$(awk '/^Hardware/{print $NF}' /proc/cpuinfo | tr '[:upper:]' '[:lower:]')
     SOC_ALT1=`getprop ro.product.board` | tr '[:upper:]' '[:lower:]'
     SOC_ALT2=`getprop ro.product.platform` | tr '[:upper:]' '[:lower:]'
-    SOC_ALT3=`ro.chipname` | tr '[:upper:]' '[:lower:]'
-    SOC_ALT4=`ro.hardware` | tr '[:upper:]' '[:lower:]'
+    SOC_ALT3=`getprop ro.chipname` | tr '[:upper:]' '[:lower:]'
+    SOC_ALT4=`getprop ro.hardware` | tr '[:upper:]' '[:lower:]'
     SOC_ALT5=`cat /data/soc.prop`
-    SOC_ALT5 = $SOC_ALT5 | tr '[:upper:]' '[:lower:]'
+    SOC_ALT5=$SOC_ALT5 | tr '[:upper:]' '[:lower:]'
 
     snapdragon=0
     chip=0
@@ -227,8 +227,7 @@ function is_cpu() {
           fi
         fi
       fi
-
-    else
+    fi
 
     if [ "$SOC" != "${SOC/msm/}" ]; then
     snapdragon=1
@@ -239,9 +238,6 @@ function is_cpu() {
     else
     snapdragon=0
     fi
-
-    fi
-
 
     if [ $BATT_HLTH -eq "2" ];then
     BATT_HLTH="Very Good"
@@ -576,8 +572,6 @@ vm.vfs_cache_pressure=70 \
 vm.overcommit_memory=50 \
 vm.overcommit_ratio=0 \
 vm.laptop_mode=5 \
-kernel.random.read_wakeup_threshold=64 \
-kernel.random.write_wakeup_threshold=128 \
 vm.block_dump=0 \
 vm.dirty_writeback_centisecs=0 \
 vm.dirty_expire_centisecs=0 \
@@ -585,6 +579,9 @@ vm.compact_memory=1 \
 vm.compact_unevictable_allowed=1 \
 vm.page-cluster=0 \
 vm.panic_on_oom=0 &> /dev/null
+
+sysctl -w kernel.random.read_wakeup_threshold=64
+sysctl -w kernel.random.write_wakeup_threshold=128
 else
 sysctl -e -w  vm.drop_caches=3 \
 vm.oom_dump_tasks=1 \
@@ -595,8 +592,6 @@ vm.vfs_cache_pressure=100 \
 vm.overcommit_memory=50 \
 vm.overcommit_ratio=0 \
 vm.laptop_mode=0 \
-kernel.random.read_wakeup_threshold=64 \
-kernel.random.write_wakeup_threshold=896 \
 vm.block_dump=0 \
 vm.dirty_writeback_centisecs=500 \
 vm.dirty_expire_centisecs=1500 \
@@ -604,6 +599,9 @@ vm.compact_memory=1 \
 vm.compact_unevictable_allowed=1 \
 vm.page-cluster=0 \
 vm.panic_on_oom=0 &> /dev/null
+
+sysctl -w kernel.random.read_wakeup_threshold=64
+sysctl -w kernel.random.write_wakeup_threshold=896
 fi
 
 
@@ -2670,14 +2668,6 @@ if [[ $sch == *"maple"* ]]
 then
 	set_io maple /sys/block/mmcblk0
 	set_io maple /sys/block/sda
-elif [[ $sch == *"row"* ]]
-then
-	set_io row /sys/block/mmcblk0
-	set_io row /sys/block/sda
-elif [[ $sch == *"zen"* ]]
-then
-	set_io zen /sys/block/mmcblk0
-	set_io zen /sys/block/sda
 else
 	set_io cfq /sys/block/mmcblk0
 	set_io cfq /sys/block/sda
