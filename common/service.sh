@@ -3,7 +3,7 @@
 # Codename: LKT
 # Author: korom42 @ XDA
 # Device: Universal
-# Version : 1.2.7
+# Version : 1.2.9
 # Last Update: 18.DEC.2018
 # ====================================================#
 # THE BEST BATTERY MOD YOU CAN EVER USE
@@ -120,7 +120,7 @@ function set_io() {
     sleep 50
 
     #MOD Variable
-    V="1.2.8"
+    V="1.2.9"
     PROFILE=<PROFILE_MODE>
     LOG=/data/LKT.prop
     dt=$(date '+%d/%m/%Y %H:%M:%S');
@@ -147,7 +147,7 @@ function set_io() {
     BATT_VOLT=$(awk -v x=$BATT_VOLT 'BEGIN{print x/1000}')
     BATT_TEMP=$(awk -v x=$BATT_TEMP 'BEGIN{print x/10}')
     VENDOR=`getprop ro.product.brand`
-    ROM=`getprop ro.build.display.id`
+    ROM=`getprop ro.build.description`
     KERNEL="$(uname -r)"
     APP=`getprop ro.product.model`
     SOC=$(awk '/^Hardware/{print $NF}' /proc/cpuinfo | tr '[:upper:]' '[:lower:]')
@@ -169,44 +169,62 @@ function set_io() {
      rm $LOG;
     fi;
 
+    if [ ! -f "/system/bin/busybox" ] && [ ! -f "/system/xbin/busybox" ]; then
+    logdata "# Busybox not found .. Aborting"
+    logdata "# Please install busybox then try again"
+    exit 0
+    fi
 
     if [ "$SOC" == "" ];then
-    if [ "$SOC_ALT1" != "${SOC_ALT1/msm/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/universal/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/kirin/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/moorefield/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/mt/}" ];then
+    if [ "$SOC_ALT1" != "${SOC_ALT1/msm/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/sdm/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/universal/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/kirin/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/moorefield/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/mt/}" ];then
     SOC=$SOC_ALT1
     fi
     fi
 	
     if [ "$SOC" == "" ];then
-    if [ "$SOC_ALT2" != "${SOC_ALT2/msm/}" ] || [ "$SOC_ALT2" != "${SOC_ALT2/universal/}" ] || [ "$SOC_ALT2" != "${SOC_ALT2/kirin/}" ] || [ "$SOC_ALT2" != "${SOC_ALT2/moorefield/}" ] || [ "$SOC_ALT2" != "${SOC_ALT2/mt/}" ];then
+    if [ "$SOC_ALT2" != "${SOC_ALT2/msm/}" ] || [ "$SOC_ALT2" != "${SOC_ALT2/sdm/}" ] || [ "$SOC_ALT2" != "${SOC_ALT2/universal/}" ] || [ "$SOC_ALT2" != "${SOC_ALT2/kirin/}" ] || [ "$SOC_ALT2" != "${SOC_ALT2/moorefield/}" ] || [ "$SOC_ALT2" != "${SOC_ALT2/mt/}" ];then
     SOC=$SOC_ALT2
     fi
     fi
     
     if [ "$SOC" == "" ];then
-	if [ "$SOC_ALT3" != "${SOC_ALT3/msm/}" ] || [ "$SOC_ALT3" != "${SOC_ALT3/universal/}" ] || [ "$SOC_ALT3" != "${SOC_ALT3/kirin/}" ] || [ "$SOC_ALT3" != "${SOC_ALT3/moorefield/}" ] || [ "$SOC_ALT3" != "${SOC_ALT3/mt/}" ];then
+	if [ "$SOC_ALT3" != "${SOC_ALT3/msm/}" ] || [ "$SOC_ALT3" != "${SOC_ALT3/sdm/}" ] || [ "$SOC_ALT3" != "${SOC_ALT3/universal/}" ] || [ "$SOC_ALT3" != "${SOC_ALT3/kirin/}" ] || [ "$SOC_ALT3" != "${SOC_ALT3/moorefield/}" ] || [ "$SOC_ALT3" != "${SOC_ALT3/mt/}" ];then
     SOC=$SOC_ALT3
     fi
     fi
 
     if [ "$SOC" == "" ];then
-    if [ "$SOC_ALT4" != "${SOC_ALT4/msm/}" ] || [ "$SOC_ALT4" != "${SOC_ALT4/universal/}" ] || [ "$SOC_ALT4" != "${SOC_ALT4/kirin/}" ] || [ "$SOC_ALT4" != "${SOC_ALT4/moorefield/}" ] || [ "$SOC_ALT4" != "${SOC_ALT4/mt/}" ];then
+    if [ "$SOC_ALT4" != "${SOC_ALT4/msm/}" ] || [ "$SOC_ALT4" != "${SOC_ALT4/sdm/}" ] || [ "$SOC_ALT4" != "${SOC_ALT4/universal/}" ] || [ "$SOC_ALT4" != "${SOC_ALT4/kirin/}" ] || [ "$SOC_ALT4" != "${SOC_ALT4/moorefield/}" ] || [ "$SOC_ALT4" != "${SOC_ALT4/mt/}" ];then
     SOC=$SOC_ALT4
     fi
     fi
 
-    if [ "$SOC_ALT4" == "" ];then
+    if [ "$SOC" == "" ];then
     SOC=$SOC_ALT5
     fi
 
     if [ "$SOC_ALT5" == "" ];then
     if [ ! -f $CPU_FILE ]; then
     logdata "# *ERROR* CPU chip model detection failed"
+    logdata "#  "
+    logdata "#  "
+    logdata "#  "
+    logdata "#  "
     logdata "# 1) Using a ROOT file explorer"
+    logdata "#  "
     logdata "# 2) Go to $CPU_FILE and edit it with your chip model"
-    logdata "#    example 1: CPU=kirin970"
-    logdata "#    example 2: CPU=msm8996"
-    logdata "#    example 3: CPU=exynos8995"
+    logdata "#  "
+    logdata "#    example (Huawei kirin 970)       CPU=kirin970"
+    logdata "#    example (Snapdragon 820 or 821)  CPU=msm8996"
+    logdata "#    example (Galaxy S8 exynos8890)   CPU=universal8890"
+    logdata "#  "
     logdata "# 3) Save changes & Reboot"
+    logdata "#  "
+    logdata "#  "
+    logdata "#  "
+    logdata "#  "
+    logdata "# TIP: Use CPU-Z app or find your correct CPU Model number on this page"
+    logdata "# https://en.wikipedia.org/wiki/List_of_Qualcomm_Snapdragon_systems-on-chip"
     write $CPU_FILE "CPU="
     exit 0
     else
@@ -216,11 +234,7 @@ function set_io() {
     fi
    
 
-    if [ "$SOC" != "${SOC/msm/}" ]; then
-    snapdragon=1
-    elif [ "$SOC" != "${SOC/sdm/}" ]; then
-    snapdragon=1
-    elif [ "$SOC" != "${SOC/apq/}" ]; then
+    if [ "$SOC" != "${SOC/msm/}" ] || [ "$SOC" != "${SOC/sdm/}" ] || [ "$SOC" != "${SOC/apq/}" ]; then
     snapdragon=1
     else
     snapdragon=0
@@ -363,18 +377,38 @@ fi
 
 }
 
-function disable_swap() {
-	swapp=`blkid | grep swap | awk '{print $1}'`;
-        uuid=`blkid -s UUID -o value $swapp | awk '{print $1}'`; 
+zram_dev()
+{
+	local idx="$1"
+	echo "/dev/zram${idx:-0}"
+}
 
+zram_reset()
+{
+	local dev="$1"
+	local proc_entry="/sys/block/$( basename "$dev" )/reset"
+	echo "1" >"$proc_entry"
+}
+
+function disable_swap() {
 
 	if [ -f /system/bin/swapoff ] ; then
         swff="/system/bin/swapoff"
+	elif [ -f /system/xbin/swapoff ] ; then
+        swff="/system/xbin/swapoff"
 	else
 	swff="swapoff"
 	fi
 
-        write /sys/class/zram-control/hot_remove $uuid
+	local zram_dev
+
+	for zram_dev in $( grep zram /proc/swaps |awk '{print $1}' ); do {
+		swff "$zram_dev" && zram_reset "$zram_dev"
+		local dev_index="$( echo $zram_dev | grep -o "[0-9]*$" )"
+		if [ $dev_index -ne 0 ]; then
+			echo $dev_index > /sys/class/zram-control/hot_remove
+		fi
+	} done
 
 	for i in /sys/block/zram*; do
 	set_value "1" $i/reset;
@@ -389,29 +423,6 @@ function disable_swap() {
 	for k in /sys/block/vnswap*; do
 	set_value "1" $k/reset;
 	set_value "0" $k/disksize
-	done
-
-	swff $swapp > /dev/null 2>&1;
-        c=1
-	for l in /dev/block*; do  
-	while [ $c -lt 10 ]
-
-        do
-        if [ -e "$l/zram$c" ]; then
-	swff $l/zram$c > /dev/null 2>&1;
-        fi
-
-        if [ -e "$l/swap$c" ]; then
-	swff $l/swap$c > /dev/null 2>&1;
-        fi
-
-        if [ -e "$l/vnswap$c" ]; then
-	swff $l/vnswap$c > /dev/null 2>&1;
-        fi
-
-	c=$(( $c + 1 ))
-
-        done
 	done
 
 	resetprop -n vnswap.enabled false
@@ -608,31 +619,31 @@ sync;
 
 function CPU_tuning() {
 
-if [ $snapdragon -eq 1 ];then
+    if [ $snapdragon -eq 1 ];then
 
-logdata "#  Snapdragon SoC detected" 
+    logdata "#  Snapdragon SoC detected" 
 
     # disable thermal bcl hotplug to switch governor
     write /sys/module/msm_thermal/core_control/enabled "0"
     write /sys/module/msm_thermal/parameters/enabled "N"
 	
- else
- 	logdata "#  Non-Snapdragon SoC detected" 
+    else
 
- 	# Linaro HMP, between 0 and 1024, maybe compare to the capacity of current cluster
-	# PELT and period average smoothing sampling, so the parameter style differ from WALT by Qualcomm a lot.
-	# https://lists.linaro.org/pipermail/linaro-dev/2012-November/014485.html
-	# https://www.anandtech.com/show/9330/exynos-7420-deep-dive/6
-	# set_value 60 /sys/kernel/hmp/load_avg_period_ms
-	set_value 256 /sys/kernel/hmp/down_threshold
-	set_value 640 /sys/kernel/hmp/up_threshold
-	set_value 0 /sys/kernel/hmp/boost
+    logdata "#  Non-snapdragon SoC detected" 
 
-	# Exynos hotplug
-	set_value 0 /sys/power/cpuhotplug/enabled
-	set_value 0 /sys/devices/system/cpu/cpuhotplug/enabled
-	
-fi
+    # Linaro HMP, between 0 and 1024, maybe compare to the capacity of current cluster
+    # PELT and period average smoothing sampling, so the parameter style differ from WALT by Qualcomm a lot.
+    # https://lists.linaro.org/pipermail/linaro-dev/2012-November/014485.html
+    # https://www.anandtech.com/show/9330/exynos-7420-deep-dive/6
+    # set_value 60 /sys/kernel/hmp/load_avg_period_ms
+    set_value 256 /sys/kernel/hmp/down_threshold
+    set_value 640 /sys/kernel/hmp/up_threshold
+    set_value 0 /sys/kernel/hmp/boost
+
+    # Exynos hotplug
+    set_value 0 /sys/power/cpuhotplug/enabled
+    set_value 0 /sys/devices/system/cpu/cpuhotplug/enabled
+    fi
 
 
     if [ -e /sys/devices/soc/soc:qcom,bcl/mode ]; then
@@ -767,7 +778,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 
 	*)
 
-	logdata "#  *ERROR* EAS governor configs for your device aren't available"
+	logdata "#  *ERROR* EAS governor configs for your device are not available"
 	logdata "#  *NOTE* Consider switching to HMP Kernel if possible" 
 
 	;;
@@ -801,20 +812,8 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	set_param cpu$bcores ignore_hispeed_on_notif 0
 	set_value 0 /sys/devices/system/cpu/cpu0/cpufreq/interactive/enable_prediction
 	set_value 0 /sys/devices/system/cpu/cpu$bcores/cpufreq/interactive/enable_prediction
-	
-	# Input Boost
-	if [ -e "/sys/module/cpu_boost/parameters/input_boost_freq" ]; then
-	if [ $coresmax -eq 1 ];then
-	set_value "0:0 1:0" /sys/module/cpu_boost/parameters/input_boost_freq
-	elif [ $coresmax -eq 3 ];then
-	set_value "0:0 1:0 2:0 3:0" /sys/module/cpu_boost/parameters/input_boost_freq
-	elif [ $coresmax -eq 5 ];then
-	set_value "0:0 1:0 2:0 3:0 4:0 5:0" /sys/module/cpu_boost/parameters/input_boost_freq
-	elif [ $coresmax -eq 7 ];then
-	set_value "0:0 1:0 2:0 3:0 4:0 5:0 6:0 7:0" /sys/module/cpu_boost/parameters/input_boost_freq
-	elif [ $coresmax -eq 9 ];then
-	set_value "0:0 1:0 2:0 3:0 4:0 5:0 6:0 7:0 8:0 9:0" /sys/module/cpu_boost/parameters/input_boost_freq
-	fi
+
+	if [ -e "/sys/module/cpu_boost/parameters/input_boost_ms" ]; then
 	set_value 2500 /sys/module/cpu_boost/parameters/input_boost_ms
 	else
 	logdata "#  *WARNING* Your Kernel does not support CPU BOOST  " 
@@ -2469,60 +2468,12 @@ after_modify
 # HMP Scheduler Tweaks
 # =========
 
-write /proc/sys/kernel/sched_select_prev_cpu_us 0
-write /proc/sys/kernel/sched_spill_nr_run 5
-write /proc/sys/kernel/sched_restrict_cluster_spill 1
-write /proc/sys/kernel/sched_prefer_sync_wakee_to_waker 1
-#write /proc/sys/kernel/sched_window_stats_policy 2
-#write /proc/sys/kernel/sched_upmigrate 45
-#write /proc/sys/kernel/sched_downmigrate 25
-#write /proc/sys/kernel/sched_spill_nr_run 3
-write /proc/sys/kernel/sched_spill_load 90
-write /proc/sys/kernel/sched_init_task_load 40
-#if [ -e "/proc/sys/kernel/sched_heavy_task" ]; then
-#    write /proc/sys/kernel/sched_heavy_task 0
-#fi
-#write /proc/sys/kernel/sched_upmigrate_min_nice 15
-#write /proc/sys/kernel/sched_ravg_hist_size 4
-#if [ -e "/proc/sys/kernel/sched_small_wakee_task_load" ]; then
-#write /proc/sys/kernel/sched_small_wakee_task_load 65
-#fi
-#if [ -e "/proc/sys/kernel/sched_wakeup_load_threshold" ]; then
-#write /proc/sys/kernel/sched_wakeup_load_threshold 110
-#fi
-#if [ -e "/proc/sys/kernel/sched_small_task" ]; then
-#write /proc/sys/kernel/sched_small_task 10
-#fi
-#if [ -e "/proc/sys/kernel/sched_big_waker_task_load" ]; then
-#write /proc/sys/kernel/sched_big_waker_task_load 80
-#fi
-#if [ -e "/proc/sys/kernel/sched_rt_runtime_us" ]; then
-#write /proc/sys/kernel/sched_rt_runtime_us 950000
-#fi
-#if [ -e "/proc/sys/kernel/sched_rt_period_us" ]; then
-#write /proc/sys/kernel/sched_rt_period_us 1000000
-#fi
-#if [ -e "/proc/sys/kernel/sched_enable_thread_grouping" ]; then
-#write /proc/sys/kernel/sched_enable_thread_grouping 1
-#fi
-#if [ -e "/proc/sys/kernel/sched_rr_timeslice_ms" ]; then
-#write /proc/sys/kernel/sched_rr_timeslice_ms 20
-#fi
-#if [ -e "/proc/sys/kernel/sched_migration_fixup" ]; then
-#write /proc/sys/kernel/sched_migration_fixup 1
-#fi
-#if [ -e "/proc/sys/kernel/sched_freq_dec_notify" ]; then
-#write /proc/sys/kernel/sched_freq_dec_notify 400000
-#fi
-#if [ -e "/proc/sys/kernel/sched_freq_inc_notify" ]; then
-write /proc/sys/kernel/sched_freq_inc_notify 3000000
-#fi
-if [ -e "/proc/sys/kernel/sched_boost" ]; then
-write /proc/sys/kernel/sched_boost 0
-fi
-#if [ -e "/proc/sys/kernel/sched_enable_power_aware" ]; then
-#    write /proc/sys/kernel/sched_enable_power_aware 1
-#fi
+    set_value 90 /proc/sys/kernel/sched_spill_load
+    set_value 0 /proc/sys/kernel/sched_boost
+    set_value 1 /proc/sys/kernel/sched_prefer_sync_wakee_to_waker
+    set_value 40 /proc/sys/kernel/sched_init_task_load
+    set_value 3000000 /proc/sys/kernel/sched_freq_inc_notify
+
 
 	fi
 	
@@ -2694,10 +2645,10 @@ algos=$(</proc/sys/net/ipv4/tcp_available_congestion_control);
 if [[ $algos == *"westwood"* ]]
 then
 write /proc/sys/net/ipv4/tcp_congestion_control "westwood"
-logdata "#  (TCP) Enabling westwood algorithm  .. DONE" 
+logdata "# Enabling westwood TCP algorithm  .. DONE" 
 else
 write /proc/sys/net/ipv4/tcp_congestion_control "cubic"
-logdata "#  (TCP) Enabling cubic algorithm .. DONE" 
+
 fi
 
 # Increase WI-FI scan delay
@@ -2821,20 +2772,6 @@ sleep "0.001"
 su -c "pm enable com.google.android.gsf/.update.SystemUpdateService$Receiver"
 sleep "0.001"
 su -c "pm enable com.google.android.gsf/.update.SystemUpdateService$SecretCodeReceiver"
-
-
-# =========
-# CLEAN UP
-# =========
-
-# Search all subdirectories
-
-for f in $(find /cache -name '*.apk' -or -name '*.tmp' -or -name '*.temp' -or -name '*.log' -or -name '*.txt'); do sleep "0.001" && rm $f; done
-for f in $(find /data -name '*.tmp' -or -name '*.temp' -or -name '*.log' ); do sleep "0.001" && rm $f; done
-for f in $(find /sdcard -name '*.tmp' -or -name '*.temp' -or -name '*.log'); do sleep "0.001" && rm $f; done
-
-
-logdata "#  Clean-up .. DONE" 
 
 # FS-TRIM
 
