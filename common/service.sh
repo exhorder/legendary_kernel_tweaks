@@ -112,25 +112,15 @@ function set_io() {
 	fi
 }
 
-function is_cpu() {
-
-    if [ "$SOC_ALT1" != "${SOC_ALT1/msm/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/sdm/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/apq/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/universal/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/kirin/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/moorefield/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/mt/}" ];then
-
-        return 1
-    else
-        return 0
-    fi
-
-}
 
     # Sleep at boot
     # Do not decrease
     # Better late than never
 
-    sleep 60
+    sleep 50
 
     #MOD Variable
-    V="1.2.7"
+    V="1.2.8"
     PROFILE=<PROFILE_MODE>
     LOG=/data/LKT.prop
     dt=$(date '+%d/%m/%Y %H:%M:%S');
@@ -165,8 +155,8 @@ function is_cpu() {
     SOC_ALT2=`getprop ro.product.platform` | tr '[:upper:]' '[:lower:]'
     SOC_ALT3=`getprop ro.chipname` | tr '[:upper:]' '[:lower:]'
     SOC_ALT4=`getprop ro.hardware` | tr '[:upper:]' '[:lower:]'
-    SOC_ALT5=`cat /data/soc.prop`
-    SOC_ALT5=$SOC_ALT5 | tr '[:upper:]' '[:lower:]'
+    CPU_FILE="/data/soc.txt"
+    SOC_ALT5=$(awk -F= '{ print $2 }' $CPU_FILE | tr '[:upper:]' '[:lower:]')
 
     snapdragon=0
     chip=0
@@ -179,55 +169,52 @@ function is_cpu() {
      rm $LOG;
     fi;
 
-    is_substring(){
-        case "$2" in
-                *$1*) chip=1;;
-                *) chip=0;;
-        esac
-    }
 
-
-    function chip_check() {
-        is_substring "msm" $1 || is_substring "apq" $1 || is_substring "sdm" $1 ||is_substring "universal" $1 || is_substring "kirin" $1 || is_substring "moorefield" $1
-    }
-
-
-    if [ -z "$SOC" ] ;then
-    chip_check $SOC_ALT1
-      if [ $chip -eq "1" ];then
-      SOC=$SOC_ALT1
-      else
-      chip_check $SOC_ALT2
-        if [ $chip -eq "1" ];then
-        SOC=$SOC_ALT2
-        else
-        chip_check $SOC_ALT3
-          if [ $chip -eq "1" ];then
-          SOC=$SOC_ALT3
-          else
-          chip_check $SOC_ALT4
-            if [ $chip -eq "1" ];then
-            SOC=$SOC_ALT4
-            else
-            chip_check $SOC_ALT5
-              if [ $chip -eq "1" ];then
-              SOC=$SOC_ALT5
-              else
-              logdata "# *ERROR* CPU chip model detection failed"
-              logdata "# 1) Using a ROOT file explorer"
-              logdata "# 2) Navigate to /data/SOC.prop and edit it with your chip model"
-              logdata "#    ex: kirin970, msm8996, exynos8995 etc..."
-              logdata "# 3) Save changes & Reboot"
-              if [ ! -f /data/SOC.prop ]; then
-              touch "/data/soc.prop"
-              fi
-              exit 0
-              fi
-            fi
-          fi
-        fi
-      fi
+    if [ "$SOC" == "" ];then
+    if [ "$SOC_ALT1" != "${SOC_ALT1/msm/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/universal/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/kirin/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/moorefield/}" ] || [ "$SOC_ALT1" != "${SOC_ALT1/mt/}" ];then
+    SOC=$SOC_ALT1
     fi
+    fi
+	
+    if [ "$SOC" == "" ];then
+    if [ "$SOC_ALT2" != "${SOC_ALT2/msm/}" ] || [ "$SOC_ALT2" != "${SOC_ALT2/universal/}" ] || [ "$SOC_ALT2" != "${SOC_ALT2/kirin/}" ] || [ "$SOC_ALT2" != "${SOC_ALT2/moorefield/}" ] || [ "$SOC_ALT2" != "${SOC_ALT2/mt/}" ];then
+    SOC=$SOC_ALT2
+    fi
+    fi
+    
+    if [ "$SOC" == "" ];then
+	if [ "$SOC_ALT3" != "${SOC_ALT3/msm/}" ] || [ "$SOC_ALT3" != "${SOC_ALT3/universal/}" ] || [ "$SOC_ALT3" != "${SOC_ALT3/kirin/}" ] || [ "$SOC_ALT3" != "${SOC_ALT3/moorefield/}" ] || [ "$SOC_ALT3" != "${SOC_ALT3/mt/}" ];then
+    SOC=$SOC_ALT3
+    fi
+    fi
+
+    if [ "$SOC" == "" ];then
+    if [ "$SOC_ALT4" != "${SOC_ALT4/msm/}" ] || [ "$SOC_ALT4" != "${SOC_ALT4/universal/}" ] || [ "$SOC_ALT4" != "${SOC_ALT4/kirin/}" ] || [ "$SOC_ALT4" != "${SOC_ALT4/moorefield/}" ] || [ "$SOC_ALT4" != "${SOC_ALT4/mt/}" ];then
+    SOC=$SOC_ALT4
+    fi
+    fi
+
+    if [ "$SOC_ALT4" == "" ];then
+    SOC=$SOC_ALT5
+    fi
+
+    if [ "$SOC_ALT5" == "" ];then
+    if [ ! -f $CPU_FILE ]; then
+    logdata "# *ERROR* CPU chip model detection failed"
+    logdata "# 1) Using a ROOT file explorer"
+    logdata "# 2) Go to $CPU_FILE and edit it with your chip model"
+    logdata "#    example 1: CPU=kirin970"
+    logdata "#    example 2: CPU=msm8996"
+    logdata "#    example 3: CPU=exynos8995"
+    logdata "# 3) Save changes & Reboot"
+    write $CPU_FILE "CPU="
+    exit 0
+    else
+    rm $LOG;
+    SOC=$SOC_ALT5
+    fi
+    fi
+   
 
     if [ "$SOC" != "${SOC/msm/}" ]; then
     snapdragon=1

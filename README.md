@@ -52,6 +52,9 @@ Google Pixel & EAS phones
 Please note that even if your device isn't listed some parameters may stil apply
 
 ## Changelog
+### v1.2.8 (18/12/2018)
+- Bug fixes for manual chip detection workarround
+
 ### v1.2.7 (18/12/2018)
 - Minor fixes
 
