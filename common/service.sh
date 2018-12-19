@@ -137,7 +137,11 @@ function set_io() {
     govn=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
     bcl_soc_hotplug_mask=`cat /sys/devices/soc/soc:qcom,bcl/hotplug_soc_mask`
     bcl_hotplug_mask=`cat /sys/devices/soc/soc:qcom,bcl/hotplug_mask`
-	
+    if [ -e "/sys/kernel/cpu_input_boost/enabled" ]; then
+    inpboost="/sys/kernel/cpu_input_boost/ib_freqs"
+    else
+    inpboost="/sys/module/cpu_boost/parameters/input_boost_freq"
+    fi
 	# Device infos
     BATT_LEV=`dumpsys battery | grep level | awk '{print $2}'`    
     BATT_TECH=`dumpsys battery | grep technology | awk '{print $2}'`
@@ -738,7 +742,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 
 	if [ $PROFILE -eq 0 ];then
 	set_value "0:1680000 4:1880000" /sys/module/msm_performance/parameters/cpu_max_freq
-	set_value "0:1080000 4:0" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:1080000 4:0" $inpboost
 	set_value 2 /sys/devices/system/cpu/cpu4/core_ctl/min_cpus
 	set_value 2 /sys/devices/system/cpu/cpu4/core_ctl/max_cpus
 	set_param_eas cpu0 hispeed_freq 1180000
@@ -749,7 +753,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	set_param_eas cpu4 pl 0
 	elif [ $PROFILE -eq 1 ]; then
 	set_value "0:1780000 4:2280000" /sys/module/msm_performance/parameters/cpu_max_freq
-	set_value "0:1080000 4:0" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:1080000 4:0" $inpboost
 	set_value 2 /sys/devices/system/cpu/cpu4/core_ctl/min_cpus
 	set_value 4 /sys/devices/system/cpu/cpu4/core_ctl/max_cpus
 	set_param_eas cpu0 hispeed_freq 1280000
@@ -760,7 +764,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	set_param_eas cpu4 pl 0
 	elif [ $PROFILE -eq 2 ]; then
 	set_value "0:1780000 4:2880000" /sys/module/msm_performance/parameters/cpu_max_freq
-	set_value "0:1180000 4:0" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:1180000 4:0" $inpboost
 	set_value 2 /sys/devices/system/cpu/cpu4/core_ctl/min_cpus
 	set_value 4 /sys/devices/system/cpu/cpu4/core_ctl/max_cpus
 	set_param_eas cpu0 hispeed_freq 1380000
@@ -771,7 +775,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	set_param_eas cpu4 pl 1
 	elif [ $PROFILE -eq 3 ]; then # Turbo
 	set_value "0:1780000 4:2280000" /sys/module/msm_performance/parameters/cpu_max_freq
-	set_value "0:1480000 4:1680000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:1480000 4:1680000" $inpboost
 	set_value 4 /sys/devices/system/cpu/cpu4/core_ctl/min_cpus
 	set_value 4 /sys/devices/system/cpu/cpu4/core_ctl/max_cpus
 	set_param_eas cpu0 hispeed_freq 1480000
@@ -825,6 +829,9 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 
 	if [ -e "/sys/module/cpu_boost/parameters/input_boost_ms" ]; then
 	set_value 2500 /sys/module/cpu_boost/parameters/input_boost_ms
+        elif [ -e "/sys/kernel/cpu_input_boost/enabled" ]; then
+        set_value 1 /sys/kernel/cpu_input_boost/enabled
+	set_value 2500 /sys/kernel/cpu_input_boost/ib_duration_ms
 	else
 	logdata "#  *WARNING* Your Kernel does not support CPU BOOST  " 
 	fi
@@ -840,8 +847,6 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	logdata "#  *WARNING* Your Kernel does not support TOUCH BOOST  " 
 	fi
 
-
-	
 	if [ $PROFILE -eq 0 ];then
 	case "$SOC" in
 	"msm8998" | "apq8098" | "apq8098_latv") #sd835
@@ -850,7 +855,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	set_value 0-3,4-7 /dev/cpuset/foreground/cpus
 	set_value 0-3,4-7 /dev/cpuset/top-app/cpus
 
-	set_value "0:380000 4:380000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:380000 4:380000" $inpboost
 
   	set_param cpu0 above_hispeed_delay "18000 1380000:58000 1480000:18000 1580000:98000"
 	set_param cpu0 hispeed_freq 1180000
@@ -867,7 +872,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	
 	case "$SOC" in
     "msm8996" | "msm8996pro" | "msm8996au" |  "msm8996sg" | "msm8996pro-aa"| "msm8996pro-ab" | "msm8996pro-ac" | "apq8096" | "apq8096_latv") #sd820
-	set_value "0:380000 2:380000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:380000 2:380000" $inpboost
 	
 	set_value 1 /dev/cpuset/background/cpus
 	set_value 0-1 /dev/cpuset/system-background/cpus
@@ -890,7 +895,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	
 	case "$SOC" in
     "msm8994" | "msm8994pro" | "msm8994pro-aa"| "msm8994pro-ab" | "msm8994pro-ac" | "msm8992" | "msm8992pro" | "msm8992pro-aa" | "msm8992pro-ab" | "msm8992pro-ac") #sd810/808
-	set_value "0:580000 4:480000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:580000 4:480000" $inpboost
 	
 	set_value 2-3 /dev/cpuset/background/cpus
 	set_value 0-3 /dev/cpuset/system-background/cpus
@@ -915,7 +920,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	stop mpdecision
 
 	setprop ro.qualcomm.perf.cores_online 2
-	set_value "380000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "380000" $inpboost
 
 	set_param cpu0 above_hispeed_delay "18000 1680000:98000 1880000:138000"
 	set_param cpu0 hispeed_freq 1180000
@@ -942,7 +947,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	set_value 0-3,4-7 /dev/cpuset/foreground/cpus
 	set_value 0-3,4-7 /dev/cpuset/top-app/cpus
 
-	set_value "0:880000 4:1380000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:880000 4:1380000" $inpboost
 
 	set_param cpu0 above_hispeed_delay "38000 1380000:98000"
 	set_param cpu0 hispeed_freq 1080000
@@ -966,7 +971,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	set_value 0-3,4-7 /dev/cpuset/foreground/cpus
 	set_value 0-3,4-7 /dev/cpuset/top-app/cpus
 	
-	set_value "0:680000 4:880000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:680000 4:880000" $inpboost
 
 	set_param cpu0 above_hispeed_delay "98000 1380000:78000"
 	set_param cpu0 hispeed_freq 1180000
@@ -983,7 +988,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	
 	case "$SOC" in
     "sdm636" ) #sd636
-	set_value "0:880000 4:1380000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:880000 4:1380000" $inpboost
 	
 	set_value 2-3 /dev/cpuset/background/cpus
 	set_value 0-3 /dev/cpuset/system-background/cpus
@@ -1013,7 +1018,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	set_value 25 /proc/sys/kernel/sched_downmigrate
 	set_value 45 /proc/sys/kernel/sched_upmigrate
 
-	set_value "0:980000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:980000" $inpboost
 	
 	set_param cpu0 above_hispeed_delay "18000 1680000:98000 1880000:138000"
 	set_param cpu0 hispeed_freq 1380000
@@ -1238,7 +1243,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	set_value 0-3,4-7 /dev/cpuset/foreground/cpus
 	set_value 0-3,4-7 /dev/cpuset/top-app/cpus
 
-	set_value "0:380000 4:380000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:380000 4:380000" $inpboost
 
 	set_param cpu0 above_hispeed_delay "18000 1580000:98000"
 	set_param cpu0 hispeed_freq 1180000
@@ -1255,7 +1260,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	
 	case "$SOC" in
     "msm8996" | "msm8996pro" | "msm8996au" |  "msm8996sg" | "msm8996pro-aa"| "msm8996pro-ab" | "msm8996pro-ac" | "apq8096" | "apq8096_latv") #sd820
-	set_value "0:380000 2:380000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:380000 2:380000" $inpboost
 	
 	set_value 1 /dev/cpuset/background/cpus
 	set_value 0-1 /dev/cpuset/system-background/cpus
@@ -1278,7 +1283,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	
 	case "$SOC" in
     "msm8994" | "msm8994pro" | "msm8994pro-aa"| "msm8994pro-ab" | "msm8994pro-ac" | "msm8992" | "msm8992pro" | "msm8992pro-aa" | "msm8992pro-ab" | "msm8992pro-ac") #sd810/808
-	set_value "0:580000 4:480000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:580000 4:480000" $inpboost
 	
 	set_value 2-3 /dev/cpuset/background/cpus
 	set_value 0-3 /dev/cpuset/system-background/cpus
@@ -1303,7 +1308,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	stop mpdecision
 
 	setprop ro.qualcomm.perf.cores_online 2
-	set_value "380000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "380000" $inpboost
 
 	set_param cpu0 above_hispeed_delay "38000 1480000:78000 1680000:98000 1880000:138000"
 	set_param cpu0 hispeed_freq 1180000
@@ -1330,7 +1335,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	set_value 0-3,4-7 /dev/cpuset/foreground/cpus
 	set_value 0-3,4-7 /dev/cpuset/top-app/cpus
 
-	set_value "0:880000 4:1380000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:880000 4:1380000" $inpboost
 
 	set_param cpu0 above_hispeed_delay "98000"
 	set_param cpu0 hispeed_freq 1480000
@@ -1354,7 +1359,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	set_value 0-3,4-7 /dev/cpuset/foreground/cpus
 	set_value 0-3,4-7 /dev/cpuset/top-app/cpus
 	
-	set_value "0:680000 4:880000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:680000 4:880000" $inpboost
 
 	set_param cpu0 above_hispeed_delay "98000 1380000:58000"
 	set_param cpu0 hispeed_freq 1180000
@@ -1371,7 +1376,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	
 	case "$SOC" in
     "sdm636" ) #sd636
-	set_value "0:880000 4:1380000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:880000 4:1380000" $inpboost
 	
 	set_value 2-3 /dev/cpuset/background/cpus
 	set_value 0-3 /dev/cpuset/system-background/cpus
@@ -1401,7 +1406,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	set_value 25 /proc/sys/kernel/sched_downmigrate
 	set_value 45 /proc/sys/kernel/sched_upmigrate
 
-	set_value "0:980000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:980000" $inpboost
 	
 	set_param cpu0 above_hispeed_delay "98000 1880000:138000"
 	set_param cpu0 hispeed_freq 1680000
@@ -1686,7 +1691,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	set_value 0-3,4-7 /dev/cpuset/foreground/cpus
 	set_value 0-3,4-7 /dev/cpuset/top-app/cpus
 
-	set_value "0:380000 4:380000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:380000 4:380000" $inpboost
 
 	set_param cpu0 above_hispeed_delay "18000 1580000:98000 1780000:38000"
 	set_param cpu0 hispeed_freq 1480000
@@ -1703,7 +1708,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	
 	case "$SOC" in
     "msm8996" | "msm8996pro" | "msm8996au" |  "msm8996sg" | "msm8996pro-aa"| "msm8996pro-ab" | "msm8996pro-ac" | "apq8096" | "apq8096_latv") #sd820
-	set_value "0:380000 2:380000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:380000 2:380000" $inpboost
 	
 	set_value 1 /dev/cpuset/background/cpus
 	set_value 0-1 /dev/cpuset/system-background/cpus
@@ -1726,7 +1731,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	
 	case "$SOC" in
     "msm8994" | "msm8994pro" | "msm8994pro-aa"| "msm8994pro-ab" | "msm8994pro-ac" | "msm8992" | "msm8992pro" | "msm8992pro-aa" | "msm8992pro-ab" | "msm8992pro-ac") #sd810/808
-	set_value "0:580000 4:480000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:580000 4:480000" $inpboost
 	
 	set_value 2-3 /dev/cpuset/background/cpus
 	set_value 0-3 /dev/cpuset/system-background/cpus
@@ -1751,7 +1756,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	stop mpdecision
 
 	setprop ro.qualcomm.perf.cores_online 2
-	set_value "380000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "380000" $inpboost
 
 	set_param cpu0 above_hispeed_delay "18000 1480000:98000 1880000:38000"
 	set_param cpu0 hispeed_freq 1180000
@@ -1777,7 +1782,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	set_value 0-3,4-7 /dev/cpuset/foreground/cpus
 	set_value 0-3,4-7 /dev/cpuset/top-app/cpus
 
-	set_value "0:880000 4:1380000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:880000 4:1380000" $inpboost
 
 	set_param cpu0 above_hispeed_delay "18000 1380000:98000 1680000:38000"
 	set_param cpu0 hispeed_freq 880000
@@ -1801,7 +1806,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	set_value 0-3,4-7 /dev/cpuset/foreground/cpus
 	set_value 0-3,4-7 /dev/cpuset/top-app/cpus
 	
-	set_value "0:680000 4:880000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:680000 4:880000" $inpboost
 
 	set_param cpu0 above_hispeed_delay "98000 1280000:38000 1380000:78000"
 	set_param cpu0 hispeed_freq 1180000
@@ -1818,7 +1823,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	
 	case "$SOC" in
     "sdm636" ) #sd636
-	set_value "0:880000 4:1380000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:880000 4:1380000" $inpboost
 	
 	set_value 2-3 /dev/cpuset/background/cpus
 	set_value 0-3 /dev/cpuset/system-background/cpus
@@ -1848,7 +1853,7 @@ if [[ "$available_governors" == *"schedutil"* ]] || [[ "$available_governors" ==
 	set_value 25 /proc/sys/kernel/sched_downmigrate
 	set_value 45 /proc/sys/kernel/sched_upmigrate
 
-	set_value "0:980000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:980000" $inpboost
 	
 	set_param cpu0 above_hispeed_delay "18000 1680000:98000 1880000:38000"
 	set_param cpu0 hispeed_freq 980000
@@ -2072,7 +2077,7 @@ case "$SOC" in
 	set_value 0-3 /dev/cpuset/system-background/cpus
 	set_value 0-3,4-7 /dev/cpuset/foreground/cpus
 	set_value 0-3,4-7 /dev/cpuset/top-app/cpus
-	set_value "0:380000 4:380000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:380000 4:380000" $inpboost
 	set_value "0:1480000 4:1380000" /sys/module/msm_performance/parameters/cpu_min_freq
 
 	set_value 1480000 ${GOV_PATH_L}/scaling_min_freq
@@ -2097,7 +2102,7 @@ case "$SOC" in
 	set_value 0-1,2-3 /dev/cpuset/foreground/cpus
 	set_value 0-1,2-3 /dev/cpuset/top-app/cpus
 	set_value "0:1080000 2:1380000" /sys/module/msm_performance/parameters/cpu_min_freq
-	set_value "0:380000 2:380000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:380000 2:380000" $inpboost
 
 	set_value 1080000 ${GOV_PATH_L}/scaling_min_freq
 	set_param cpu0 above_hispeed_delay "18000 1480000:198000"
@@ -2116,7 +2121,7 @@ case "$SOC" in
 	
 	case "$SOC" in
     "msm8994" | "msm8994pro" | "msm8994pro-aa"| "msm8994pro-ab" | "msm8994pro-ac" | "msm8992" | "msm8992pro" | "msm8992pro-aa" | "msm8992pro-ab" | "msm8992pro-ac") #sd810/808
-	set_value "0:580000 4:480000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:580000 4:480000" $inpboost
 	
 	set_value 2-3 /dev/cpuset/background/cpus
 	set_value 0-3 /dev/cpuset/system-background/cpus
@@ -2143,7 +2148,7 @@ case "$SOC" in
 	stop mpdecision
 
 	setprop ro.qualcomm.perf.cores_online 2
-	set_value "380000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "380000" $inpboost
 	set_value "0:1480000 4:1480000" /sys/module/msm_performance/parameters/cpu_min_freq
 
 	set_value 1480000 ${GOV_PATH_L}/scaling_min_freq
@@ -2172,7 +2177,7 @@ case "$SOC" in
 	set_value 0-3,4-7 /dev/cpuset/top-app/cpus
 	set_value "0:1080000 4:1380000" /sys/module/msm_performance/parameters/cpu_min_freq
 
-	set_value "0:880000 4:1380000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:880000 4:1380000" $inpboost
 
 	set_value 1080000 ${GOV_PATH_L}/scaling_min_freq
 	set_param cpu0 above_hispeed_delay "18000 1680000:198000"
@@ -2196,7 +2201,7 @@ case "$SOC" in
 	set_value 0-3,4-7 /dev/cpuset/foreground/cpus
 	set_value 0-3,4-7 /dev/cpuset/top-app/cpus
 	
-	set_value "0:680000 4:880000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:680000 4:880000" $inpboost
 	set_value "0:1180000 4:1380000" /sys/module/msm_performance/parameters/cpu_min_freq
 
 	set_value 1180000 ${GOV_PATH_L}/scaling_min_freq
@@ -2214,7 +2219,7 @@ case "$SOC" in
 	
 	case "$SOC" in
     "sdm636" ) #sd636
-	set_value "0:880000 4:1380000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:880000 4:1380000" $inpboost
 	
 	set_value 2-3 /dev/cpuset/background/cpus
 	set_value 0-3 /dev/cpuset/system-background/cpus
@@ -2246,7 +2251,7 @@ case "$SOC" in
 	set_value 45 /proc/sys/kernel/sched_upmigrate
 	set_value "0:1380000 4:1380000" /sys/module/msm_performance/parameters/cpu_min_freq
 
-	set_value "0:980000" /sys/module/cpu_boost/parameters/input_boost_freq
+	set_value "0:980000" $inpboost
 	
 	set_value 1380000 ${GOV_PATH_L}/scaling_min_freq
 	set_param cpu0 above_hispeed_delay "18000 1880000:198000"
