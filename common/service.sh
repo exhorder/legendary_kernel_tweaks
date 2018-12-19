@@ -3,8 +3,8 @@
 # Codename: LKT
 # Author: korom42 @ XDA
 # Device: Universal
-# Version : 1.2.9
-# Last Update: 18.DEC.2018
+# Version : 1.3.0
+# Last Update: 19.DEC.2018
 # ====================================================#
 # THE BEST BATTERY MOD YOU CAN EVER USE
 # JUST FLASH AND FORGET
@@ -117,10 +117,10 @@ function set_io() {
     # Do not decrease
     # Better late than never
 
-    sleep 50
+    sleep 55
 
     #MOD Variable
-    V="1.2.9"
+    V="1.3.0"
     PROFILE=<PROFILE_MODE>
     LOG=/data/LKT.prop
     dt=$(date '+%d/%m/%Y %H:%M:%S');
@@ -151,10 +151,10 @@ function set_io() {
     KERNEL="$(uname -r)"
     APP=`getprop ro.product.model`
     SOC=$(awk '/^Hardware/{print $NF}' /proc/cpuinfo | tr '[:upper:]' '[:lower:]')
-    SOC_ALT1=`getprop ro.product.board` | tr '[:upper:]' '[:lower:]'
-    SOC_ALT2=`getprop ro.product.platform` | tr '[:upper:]' '[:lower:]'
-    SOC_ALT3=`getprop ro.chipname` | tr '[:upper:]' '[:lower:]'
-    SOC_ALT4=`getprop ro.hardware` | tr '[:upper:]' '[:lower:]'
+    SOC_ALT1=`getprop ro.product.board | tr '[:upper:]' '[:lower:]'`
+    SOC_ALT2=`getprop ro.product.platform | tr '[:upper:]' '[:lower:]'`
+    SOC_ALT3=`getprop ro.chipname | tr '[:upper:]' '[:lower:]'`
+    SOC_ALT4=`getprop ro.hardware | tr '[:upper:]' '[:lower:]'`
     CPU_FILE="/data/soc.txt"
     SOC_ALT5=$(awk -F= '{ print $2 }' $CPU_FILE | tr '[:upper:]' '[:lower:]')
 
@@ -171,7 +171,12 @@ function set_io() {
 
     if [ ! -f "/system/bin/busybox" ] && [ ! -f "/system/xbin/busybox" ]; then
     logdata "# Busybox not found .. Aborting"
+    logdata "# "
+    logdata "# "
     logdata "# Please install busybox then try again"
+    logdata "# "
+    logdata "# "
+    logdata "# https://forum.xda-developers.com/showthread.php?t=2239421"
     exit 0
     fi
 
@@ -203,16 +208,16 @@ function set_io() {
     SOC=$SOC_ALT5
     fi
 
-    if [ "$SOC_ALT5" == "" ];then
+    if [ "$SOC" == "" ];then
     if [ ! -f $CPU_FILE ]; then
-    logdata "# *ERROR* CPU chip model detection failed"
+    logdata "# *ERROR* Hardware detection failed"
     logdata "#  "
     logdata "#  "
     logdata "#  "
     logdata "#  "
     logdata "# 1) Using a ROOT file explorer"
     logdata "#  "
-    logdata "# 2) Go to $CPU_FILE and edit it with your chip model"
+    logdata "# 2) Go to $CPU_FILE and edit it with your CPU model"
     logdata "#  "
     logdata "#    example (Huawei kirin 970)       CPU=kirin970"
     logdata "#    example (Snapdragon 820 or 821)  CPU=msm8996"
@@ -223,7 +228,8 @@ function set_io() {
     logdata "#  "
     logdata "#  "
     logdata "#  "
-    logdata "# TIP: Use CPU-Z app or find your correct CPU Model number on this page"
+    logdata "# Tip: Use CPU-Z app or find your correct CPU Model number on this page"
+    logdata "#  "
     logdata "# https://en.wikipedia.org/wiki/List_of_Qualcomm_Snapdragon_systems-on-chip"
     write $CPU_FILE "CPU="
     exit 0
@@ -410,12 +416,16 @@ function disable_swap() {
 		fi
 	} done
 
+	for f in /dev/block/vnswap*; do
+	swff $f
+	done
+
 	for i in /sys/block/zram*; do
 	set_value "1" $i/reset;
 	set_value "0" $i/disksize
 	done
 
-	for j in /sys/block/vnswap*; do
+	for j in /sys/block/swap*; do
 	set_value "1" $j/reset;
 	set_value "0" $j/disksize
 	done
