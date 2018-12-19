@@ -60,6 +60,10 @@ if [ $PROFILE_MODE == $UNSELECTED_MODE ]; then
     ui_print "   Press Vol Down"
     $FUNCTION "DOWN"
   fi
+  ui_print " "
+  ui_print " "
+  ui_print " "
+  ui_print " "
   ui_print "** LKT Profiles **"
   ui_print " "
   ui_print "   1- Battery"

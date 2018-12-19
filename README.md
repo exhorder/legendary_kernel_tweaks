@@ -4,7 +4,7 @@
   <strong>legendary.kernel.tweaks</strong>
 </div>
 <div align="center">
-LKT can identify your <code>hardware</code> and tweak your <code>kernel</code> for maximum power efficiency without deteriorating performance
+LKT can identify your device <code>hardware</code> and optimize your <code>kernel</code> settigns for maximum power efficiency without performance loss
 </div>
 <br />
 <p align="center">
@@ -47,11 +47,15 @@ Helio x20-x25 (MEDIATEK)
 Kirin 950-955 (HUAWEI)
 Kirin 960 (HUAWEI)
 Kirin 970 (HUAWEI)
-Google Pixel & EAS phones
 ```
 Please note that even if your device isn't listed some parameters may stil apply
 
 ## Changelog
+### v1.3.0 (19/12/2018)
+- Fixed hardware auto-detection fail after last update for some devices
+- Updated to latest UNITY template 2.0
+- Bug fixes and refinemetns
+
 ### v1.2.9 (18/12/2018)
 - Important chip detection fixes
 - Improved swap detection & removal

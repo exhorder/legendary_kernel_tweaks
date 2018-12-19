@@ -3,5 +3,5 @@ name=LKT
 version=v1.2.9
 versionCode=129
 author=korom42
-description=LKT aims to tweak your android device for maximum power efficiency without deteriorating performance.
+description=LKT can identify your device hardware and optimize your kernel settigns for better power efficiency without performance loss
 minMagisk=17000

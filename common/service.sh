@@ -2806,4 +2806,8 @@ logdata "#  Battery Level: $BATT_LEV % "
 logdata "# ==============================" 
 logdata "#  Finished : $(date +"%d-%m-%Y %r")" 
 
+logdata "" 
+logdata "" 
+logdata "NOTE : WARNING ARE NORMAL .. ONLY REPORT ISSUE IF YOU SEE ERRORS"
+
 exit 0
