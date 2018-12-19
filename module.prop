@@ -1,7 +1,7 @@
 id=legendary_kernel_tweaks
 name=LKT
-version=v1.2.9
-versionCode=129
+version=v1.3.0
+versionCode=130
 author=korom42
 description=LKT can identify your device hardware and optimize your kernel settigns for better power efficiency without performance loss
 minMagisk=17000
