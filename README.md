@@ -53,6 +53,7 @@ Please note that even if your device isn't listed some parameters may stil apply
 ## Changelog
 ### v1.3.0 (19/12/2018)
 - Fixed hardware auto-detection fail after last update for some devices
+- Added support for sultanxda cpu boost implementations
 - Updated to latest UNITY template 2.0
 - Bug fixes and refinemetns
 
